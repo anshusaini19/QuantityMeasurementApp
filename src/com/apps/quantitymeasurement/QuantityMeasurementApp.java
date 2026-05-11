@@ -6,7 +6,9 @@ public class QuantityMeasurementApp {
     public enum LengthUnit {
 
         FEET(12.0),
-        INCHES(1.0);
+        INCHES(1.0),
+        YARDS(36.0),
+        CENTIMETERS(0.393701);
 
         private final double conversionFactor;
 
@@ -40,42 +42,40 @@ public class QuantityMeasurementApp {
             return value * unit.getConversionFactor();
         }
 
-        // EQUALS METHOD
         @Override
-        public boolean equals(Object obj) {
+public boolean equals(Object obj) {
 
-            // SAME REFERENCE
-            if (this == obj) {
-                return true;
-            }
+    if (this == obj) {
+        return true;
+    }
 
-            // NULL CHECK
-            if (obj == null) {
-                return false;
-            }
+    if (obj == null) {
+        return false;
+    }
 
-            // TYPE CHECK
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
+    if (getClass() != obj.getClass()) {
+        return false;
+    }
 
-            // TYPE CASTING
-            Length other = (Length) obj;
+    Length other = (Length) obj;
 
-            // VALUE COMPARISON
-            return Double.compare(
-                    this.toBaseUnit(),
-                    other.toBaseUnit()
-            ) == 0;
-        }
+    return Math.abs(
+            this.toBaseUnit() - other.toBaseUnit()
+    ) < 0.0001;
+}
     }
 
     // MAIN METHOD
     public static void main(String[] args) {
 
-        Length length1 = new Length(1.0, LengthUnit.FEET);
-        Length length2 = new Length(12.0, LengthUnit.INCHES);
+        Length feet = new Length(3.0, LengthUnit.FEET);
+        Length yard = new Length(1.0, LengthUnit.YARDS);
 
-        System.out.println(length1.equals(length2)); // true
+        System.out.println(feet.equals(yard)); // true
+
+        Length cm = new Length(2.54, LengthUnit.CENTIMETERS);
+        Length inch = new Length(1.0, LengthUnit.INCHES);
+
+        System.out.println(cm.equals(inch)); // true
     }
 }
