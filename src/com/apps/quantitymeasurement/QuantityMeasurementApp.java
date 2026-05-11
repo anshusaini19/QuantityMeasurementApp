@@ -42,40 +42,54 @@ public class QuantityMeasurementApp {
             return value * unit.getConversionFactor();
         }
 
+        // EQUALS METHOD
         @Override
-public boolean equals(Object obj) {
+        public boolean equals(Object obj) {
 
-    if (this == obj) {
-        return true;
-    }
+            // SAME REFERENCE CHECK
+            if (this == obj) {
+                return true;
+            }
 
-    if (obj == null) {
-        return false;
-    }
+            // NULL CHECK
+            if (obj == null) {
+                return false;
+            }
 
-    if (getClass() != obj.getClass()) {
-        return false;
-    }
+            // TYPE CHECK
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
 
-    Length other = (Length) obj;
+            // TYPE CASTING
+            Length other = (Length) obj;
 
-    return Math.abs(
-            this.toBaseUnit() - other.toBaseUnit()
-    ) < 0.0001;
-}
+            // FLOATING POINT COMPARISON
+            return Math.abs(
+                    this.toBaseUnit() - other.toBaseUnit()
+            ) < 0.0001;
+        }
     }
 
     // MAIN METHOD
     public static void main(String[] args) {
 
-        Length feet = new Length(3.0, LengthUnit.FEET);
-        Length yard = new Length(1.0, LengthUnit.YARDS);
+        // FEET AND INCHES COMPARISON
+        Length length1 = new Length(1.0, LengthUnit.FEET);
+        Length length2 = new Length(12.0, LengthUnit.INCHES);
 
-        System.out.println(feet.equals(yard)); // true
+        System.out.println("Are lengths equal? " + length1.equals(length2));
 
-        Length cm = new Length(2.54, LengthUnit.CENTIMETERS);
-        Length inch = new Length(1.0, LengthUnit.INCHES);
+        // YARDS AND INCHES COMPARISON
+        Length length3 = new Length(1.0, LengthUnit.YARDS);
+        Length length4 = new Length(36.0, LengthUnit.INCHES);
 
-        System.out.println(cm.equals(inch)); // true
+        System.out.println("Are lengths equal? " + length3.equals(length4));
+
+        // CENTIMETERS AND INCHES COMPARISON
+        Length length5 = new Length(100.0, LengthUnit.CENTIMETERS);
+        Length length6 = new Length(39.3701, LengthUnit.INCHES);
+
+        System.out.println("Are lengths equal? " + length5.equals(length6));
     }
 }
