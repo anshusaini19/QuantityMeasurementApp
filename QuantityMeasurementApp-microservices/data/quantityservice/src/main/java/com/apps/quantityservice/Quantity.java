@@ -1,0 +1,361 @@
+package com.apps.quantityservice;
+
+import com.apps.quantityservice.enums.TemperatureUnit;
+
+import java.util.Objects;
+import java.util.function.DoubleBinaryOperator;
+
+public class Quantity<U extends IMeasurable> {
+
+    private final double value;
+    private final U unit;
+
+    public Quantity(double value, U unit) {
+
+        if (unit == null) {
+            throw new IllegalArgumentException(
+                    "Unit cannot be null"
+            );
+        }
+
+        if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException(
+                    "Value must be finite"
+            );
+        }
+
+        this.value = value;
+        this.unit = unit;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public U getUnit() {
+        return unit;
+    }
+
+    // =====================================================
+    // UC14 UPDATED
+    // Temperature-aware conversion
+    // =====================================================
+
+    public Quantity<U> convertTo(U targetUnit) {
+
+        if (targetUnit == null) {
+            throw new IllegalArgumentException(
+                    "Target unit cannot be null"
+            );
+        }
+
+        if (unit.getClass() != targetUnit.getClass()) {
+            throw new IllegalArgumentException(
+                    "Different measurement categories"
+            );
+        }
+
+        if (unit instanceof TemperatureUnit
+                && targetUnit instanceof TemperatureUnit) {
+
+            TemperatureUnit source =
+                    (TemperatureUnit) unit;
+
+            TemperatureUnit target =
+                    (TemperatureUnit) targetUnit;
+
+            double convertedValue =
+                    source.convertTo(
+                            value,
+                            target
+                    );
+
+            return new Quantity<>(
+                    convertedValue,
+                    targetUnit
+            );
+        }
+
+        double baseValue =
+                unit.convertToBaseUnit(value);
+
+        double convertedValue =
+                targetUnit.convertFromBaseUnit(
+                        baseValue
+                );
+
+        return new Quantity<>(
+                convertedValue,
+                targetUnit
+        );
+    }
+
+    // =====================================================
+    // UC13 REFACTORED ADD
+    // =====================================================
+
+    public Quantity<U> add(
+            Quantity<U> other
+    ) {
+
+        return add(
+                other,
+                this.unit
+        );
+    }
+
+    public Quantity<U> add(
+            Quantity<U> other,
+            U targetUnit
+    ) {
+
+        validateArithmeticOperands(
+                other,
+                targetUnit,
+                true
+        );
+
+        double resultBase =
+                performBaseArithmetic(
+                        other,
+                        ArithmeticOperation.ADD
+                );
+
+        double result =
+                targetUnit.convertFromBaseUnit(
+                        resultBase
+                );
+
+        return new Quantity<>(
+                result,
+                targetUnit
+        );
+    }
+
+    // =====================================================
+    // UC13 Validation Helper
+    // =====================================================
+
+    private void validateArithmeticOperands(
+            Quantity<U> other,
+            U targetUnit,
+            boolean targetUnitRequired
+    ) {
+
+        if (other == null) {
+            throw new IllegalArgumentException(
+                    "Quantity cannot be null"
+            );
+        }
+
+        if (targetUnitRequired &&
+                targetUnit == null) {
+
+            throw new IllegalArgumentException(
+                    "Target unit cannot be null"
+            );
+        }
+
+        if (unit.getClass() !=
+                other.unit.getClass()) {
+
+            throw new IllegalArgumentException(
+                    "Different measurement categories"
+            );
+        }
+
+        if (!Double.isFinite(value)
+                || !Double.isFinite(other.value)) {
+
+            throw new IllegalArgumentException(
+                    "Values must be finite"
+            );
+        }
+    }
+
+    // =====================================================
+    // UC14 UPDATED
+    // Centralized Arithmetic Helper
+    // =====================================================
+
+    private double performBaseArithmetic(
+            Quantity<U> other,
+            ArithmeticOperation operation
+    ) {
+
+        // UC14 NEW
+        unit.validateOperationSupport(
+                operation.name()
+        );
+
+        double thisBase =
+                unit.convertToBaseUnit(value);
+
+        double otherBase =
+                other.unit.convertToBaseUnit(
+                        other.value
+                );
+
+        return operation.compute(
+                thisBase,
+                otherBase
+        );
+    }
+        // =====================================================
+    // UC13 REFACTORED SUBTRACT
+    // =====================================================
+
+    public Quantity<U> subtract(
+            Quantity<U> other
+    ) {
+
+        return subtract(
+                other,
+                this.unit
+        );
+    }
+
+    public Quantity<U> subtract(
+            Quantity<U> other,
+            U targetUnit
+    ) {
+
+        validateArithmeticOperands(
+                other,
+                targetUnit,
+                true
+        );
+
+        double resultBase =
+                performBaseArithmetic(
+                        other,
+                        ArithmeticOperation.SUBTRACT
+                );
+
+        double result =
+                targetUnit.convertFromBaseUnit(
+                        resultBase
+                );
+
+        return new Quantity<>(
+                result,
+                targetUnit
+        );
+    }
+
+    // =====================================================
+    // UC13 REFACTORED DIVIDE
+    // =====================================================
+
+    public double divide(
+            Quantity<U> other
+    ) {
+
+        validateArithmeticOperands(
+                other,
+                null,
+                false
+        );
+
+        return performBaseArithmetic(
+                other,
+                ArithmeticOperation.DIVIDE
+        );
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null ||
+                getClass() != obj.getClass()) {
+            return false;
+        }
+
+        Quantity<?> that =
+                (Quantity<?>) obj;
+
+        if (this.unit.getClass() !=
+                that.unit.getClass()) {
+            return false;
+        }
+
+        double thisBase =
+                unit.convertToBaseUnit(value);
+
+        double thatBase =
+                that.unit.convertToBaseUnit(
+                        that.value
+                );
+
+        return Double.compare(
+                thisBase,
+                thatBase
+        ) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+
+        double baseValue =
+                unit.convertToBaseUnit(value);
+
+        return Objects.hash(
+                baseValue,
+                unit.getClass()
+        );
+    }
+
+    @Override
+    public String toString() {
+
+        return "Quantity(" +
+                value +
+                ", " +
+                unit.getUnitName() +
+                ")";
+    }
+
+    // =====================================================
+    // UC13 ArithmeticOperation Enum
+    // =====================================================
+
+    private enum ArithmeticOperation {
+
+        ADD((a, b) -> a + b),
+
+        SUBTRACT((a, b) -> a - b),
+
+        DIVIDE((a, b) -> {
+
+            if (b == 0) {
+                throw new ArithmeticException(
+                        "Division by zero"
+                );
+            }
+
+            return a / b;
+        });
+
+        private final DoubleBinaryOperator operator;
+
+        ArithmeticOperation(
+                DoubleBinaryOperator operator
+        ) {
+            this.operator = operator;
+        }
+
+        public double compute(
+                double left,
+                double right
+        ) {
+            return operator.applyAsDouble(
+                    left,
+                    right
+            );
+        }
+    }
+}

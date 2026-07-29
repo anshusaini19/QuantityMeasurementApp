@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<script>
+  const token = new URLSearchParams(window.location.search).get("token");
+
+  window.location.href =
+      "http://localhost:5173/oauth-callback" +
+      (token ? "?token=" + token : "");
+</script>
+
+</body>
+</html>
